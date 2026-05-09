@@ -1,0 +1,237 @@
+/* ═══════════════════════════════════════════════════════
+   styles.css  —  Toàn bộ CSS của app Ban Giáo Lý
+   ═══════════════════════════════════════════════════════ */
+
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap');
+
+/* ── Reset & Base ─────────────────────────────────── */
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'Nunito', sans-serif;
+  background: #EFF6FF;
+  color: #1e3a5f;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── CSS Variables (màu sắc chủ đạo) ──────────────── */
+:root {
+  --sky:    #0EA5E9;   /* xanh da trời chính */
+  --sky-d:  #0284C7;   /* đậm hơn */
+  --sky-dd: #0369A1;   /* đậm nhất */
+  --sky-l:  #BAE6FD;   /* nhạt */
+  --sky-ll: #E0F2FE;   /* rất nhạt */
+  --sky-bg: #F0F9FF;   /* nền */
+  --white:  #ffffff;
+  --gray:   #64748B;
+  --lgray:  #E2E8F0;
+  --bg:     #EFF6FF;
+  --green:  #10B981;
+  --red:    #EF4444;
+  --amber:  #F59E0B;
+}
+
+/* ── Layout chính ──────────────────────────────────── */
+.app {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  max-width: 430px;    /* giới hạn như màn hình điện thoại */
+  margin: 0 auto;
+  background: var(--white);
+  box-shadow: 0 0 40px rgba(0,0,0,.06);
+}
+
+/* ── TopBar ────────────────────────────────────────── */
+.topbar {
+  background: linear-gradient(135deg, var(--sky-dd), var(--sky));
+  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+.topbar-title { color: #fff; font-weight: 800; font-size: 16px; }
+.topbar-sub   { color: var(--sky-l); font-size: 11px; font-weight: 600; }
+.avatar {
+  width: 34px; height: 34px; border-radius: 50%;
+  background: rgba(255,255,255,.2);
+  display: flex; align-items: center; justify-content: center;
+  color: #fff; font-weight: 800; font-size: 13px; cursor: pointer;
+}
+
+/* ── Bottom Navigation ─────────────────────────────── */
+.bnav {
+  display: flex;
+  background: var(--white);
+  border-top: 1.5px solid var(--lgray);
+  position: sticky; bottom: 0; z-index: 100;
+}
+.bnav-btn {
+  flex: 1; padding: 10px 4px 8px;
+  display: flex; flex-direction: column;
+  align-items: center; gap: 3px;
+  cursor: pointer; border: none; background: none;
+  color: var(--gray);
+  font-family: 'Nunito', sans-serif;
+  font-size: 10px; font-weight: 700;
+  transition: .15s;
+}
+.bnav-btn.active { color: var(--sky); }
+.bnav-btn svg    { width: 20px; height: 20px; }
+
+/* ── Content area ──────────────────────────────────── */
+.content { flex: 1; overflow-y: auto; padding: 16px; }
+
+/* ── Card ──────────────────────────────────────────── */
+.card {
+  background: var(--white);
+  border-radius: 16px; padding: 16px;
+  box-shadow: 0 2px 12px rgba(14,165,233,.08);
+  margin-bottom: 12px;
+}
+.card-blue {
+  background: linear-gradient(135deg, var(--sky-dd), var(--sky));
+  color: #fff;
+}
+
+/* ── Stat Grid ─────────────────────────────────────── */
+.stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+.stat-card {
+  background: var(--white); border-radius: 14px; padding: 14px;
+  box-shadow: 0 2px 10px rgba(14,165,233,.07);
+  display: flex; flex-direction: column; gap: 4px;
+}
+.stat-num { font-size: 26px; font-weight: 900; color: var(--sky-dd); }
+.stat-lbl { font-size: 11px; font-weight: 700; color: var(--gray); text-transform: uppercase; letter-spacing: .5px; }
+
+/* ── List item ─────────────────────────────────────── */
+.list-item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px; background: var(--white);
+  border-radius: 12px; margin-bottom: 8px;
+  box-shadow: 0 1px 6px rgba(0,0,0,.04);
+  cursor: pointer; transition: .15s;
+}
+.list-item:active { transform: scale(.98); }
+.list-avatar {
+  width: 40px; height: 40px; border-radius: 12px;
+  background: var(--sky-ll);
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 800; font-size: 15px; color: var(--sky-dd);
+  flex-shrink: 0;
+}
+.list-info   { flex: 1; min-width: 0; }
+.list-name   { font-weight: 700; font-size: 14px; color: #1e3a5f; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.list-sub    { font-size: 11px; color: var(--gray); font-weight: 600; margin-top: 2px; }
+
+/* ── Badge ─────────────────────────────────────────── */
+.badge        { display: inline-flex; align-items: center; padding: 3px 8px; border-radius: 20px; font-size: 10px; font-weight: 800; }
+.badge-blue   { background: var(--sky-ll); color: var(--sky-dd); }
+.badge-green  { background: #D1FAE5; color: #065F46; }
+.badge-red    { background: #FEE2E2; color: #991B1B; }
+.badge-amber  { background: #FEF3C7; color: #92400E; }
+
+/* ── Buttons ───────────────────────────────────────── */
+.btn {
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+  padding: 12px 20px; border-radius: 12px; border: none;
+  font-family: 'Nunito', sans-serif; font-weight: 800; font-size: 14px;
+  cursor: pointer; transition: .15s;
+}
+.btn:active    { transform: scale(.96); }
+.btn-primary   { background: linear-gradient(135deg, var(--sky-dd), var(--sky)); color: #fff; box-shadow: 0 4px 14px rgba(14,165,233,.3); }
+.btn-outline   { background: var(--white); color: var(--sky-dd); border: 2px solid var(--sky-l); }
+.btn-danger    { background: #FEE2E2; color: #991B1B; }
+.btn-sm        { padding: 7px 14px; font-size: 12px; border-radius: 9px; }
+.btn-full      { width: 100%; }
+
+/* ── FAB (nút +) ───────────────────────────────────── */
+.fab {
+  position: fixed; bottom: 80px; right: 20px;
+  width: 52px; height: 52px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--sky-dd), var(--sky));
+  border: none; color: #fff; font-size: 24px;
+  cursor: pointer; box-shadow: 0 4px 16px rgba(14,165,233,.4);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 50; transition: .15s;
+}
+.fab:active { transform: scale(.92); }
+
+/* ── Form ──────────────────────────────────────────── */
+.form-group  { margin-bottom: 14px; }
+.form-label  { font-size: 12px; font-weight: 800; color: var(--gray); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 5px; display: block; }
+.form-input  {
+  width: 100%; padding: 11px 14px;
+  border: 2px solid var(--lgray); border-radius: 10px;
+  font-family: 'Nunito', sans-serif; font-size: 14px; font-weight: 600;
+  color: #1e3a5f; outline: none; transition: .15s; background: var(--white);
+}
+.form-input:focus { border-color: var(--sky); box-shadow: 0 0 0 3px rgba(14,165,233,.12); }
+select.form-input {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2364748B' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 12px center;
+}
+
+/* ── Section header ────────────────────────────────── */
+.sec-hd    { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+.sec-title { font-size: 16px; font-weight: 900; color: #1e3a5f; }
+
+/* ── Modal ─────────────────────────────────────────── */
+.overlay { position: fixed; inset: 0; background: rgba(0,0,0,.4); z-index: 200; display: flex; align-items: flex-end; }
+.modal   { background: var(--white); border-radius: 24px 24px 0 0; padding: 20px 20px 32px; width: 100%; max-height: 90vh; overflow-y: auto; animation: slideUp .25s ease; }
+@keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+.modal-handle { width: 40px; height: 4px; background: var(--lgray); border-radius: 2px; margin: 0 auto 16px; }
+.modal-title  { font-size: 18px; font-weight: 900; color: #1e3a5f; margin-bottom: 16px; }
+
+/* ── Tabs ──────────────────────────────────────────── */
+.tabs { display: flex; gap: 6px; overflow-x: auto; margin-bottom: 14px; padding-bottom: 2px; }
+.tabs::-webkit-scrollbar { display: none; }
+.tab { padding: 7px 14px; border-radius: 20px; font-size: 12px; font-weight: 800; cursor: pointer; white-space: nowrap; border: none; font-family: 'Nunito', sans-serif; transition: .15s; }
+.tab.active         { background: var(--sky); color: #fff; }
+.tab:not(.active)   { background: var(--sky-ll); color: var(--sky-dd); }
+
+/* ── Search ────────────────────────────────────────── */
+.search-wrap  { position: relative; margin-bottom: 14px; }
+.search-input { width: 100%; padding: 10px 14px 10px 38px; border: 2px solid var(--lgray); border-radius: 10px; font-family: 'Nunito', sans-serif; font-size: 13px; font-weight: 600; outline: none; }
+.search-input:focus { border-color: var(--sky); }
+.search-icon  { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--gray); }
+
+/* ── Attendance row ────────────────────────────────── */
+.att-row  { display: flex; align-items: center; gap: 8px; padding: 10px 12px; background: var(--white); border-radius: 10px; margin-bottom: 6px; box-shadow: 0 1px 4px rgba(0,0,0,.04); }
+.att-name { flex: 1; font-weight: 700; font-size: 13px; }
+.att-btn  { padding: 5px 10px; border-radius: 8px; border: none; font-family: 'Nunito', sans-serif; font-size: 11px; font-weight: 800; cursor: pointer; transition: .15s; }
+.att-co   { background: var(--green); color: #fff; }
+.att-vang { background: var(--red);   color: #fff; }
+.att-phep { background: var(--amber); color: #fff; }
+.att-none { background: var(--lgray); color: var(--gray); }
+
+/* ── Login ─────────────────────────────────────────── */
+.login-bg {
+  min-height: 100vh;
+  background: linear-gradient(160deg, var(--sky-dd) 0%, var(--sky) 50%, var(--sky-l) 100%);
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  padding: 32px 24px;
+}
+.login-box { background: var(--white); border-radius: 24px; padding: 28px 24px; width: 100%; max-width: 380px; box-shadow: 0 20px 60px rgba(0,0,0,.15); }
+
+/* ── Empty state ───────────────────────────────────── */
+.empty      { text-align: center; padding: 40px 20px; color: var(--gray); }
+.empty-icon { font-size: 48px; margin-bottom: 8px; }
+.empty-text { font-size: 14px; font-weight: 700; }
+
+/* ── Score card ────────────────────────────────────── */
+.score-card { background: var(--white); border-radius: 12px; padding: 12px 14px; margin-bottom: 8px; box-shadow: 0 1px 6px rgba(0,0,0,.04); cursor: pointer; }
+
+/* ── Alert ─────────────────────────────────────────── */
+.alert     { padding: 10px 14px; border-radius: 10px; font-size: 13px; font-weight: 700; margin-bottom: 12px; }
+.alert-err { background: #FEE2E2; color: #991B1B; border: 1px solid #FECACA; }
+.alert-ok  { background: #D1FAE5; color: #065F46; border: 1px solid #A7F3D0; }
+
+/* ── Divider ───────────────────────────────────────── */
+.divider { height: 1px; background: var(--lgray); margin: 12px 0; }
+
+/* ── Hint text ─────────────────────────────────────── */
+.hint { font-size: 11px; color: var(--gray); margin-top: 4px; font-weight: 600; }
