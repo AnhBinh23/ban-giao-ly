@@ -67,9 +67,7 @@ export default function LoginScreen({ onLogin }) {
           {loading ? 'Đang đăng nhập...' : 'Đăng nhập'}
         </button>
 
-        <div className="hint" style={{ textAlign: 'center', marginTop: 12 }}>
-          Demo: admin@bgl.com / gly@bgl.com — mật khẩu: 123456
-        </div>
+
       </div>
     </div>
   )

@@ -12,14 +12,11 @@ import Attendance                       from './pages/Attendance'
 import Scores                           from './pages/Scores'
 import Reports                          from './pages/Reports'
 
-// ══════════════════════════════════════════════════════════
-// UserMenuContent — Hồ sơ cá nhân + đổi mật khẩu
-// ══════════════════════════════════════════════════════════
-function UserMenuContent({ user, onUpdateUser, onLogout, onClose }) {
-  const [tab,        setTab]     = useState('info')   // 'info' | 'edit' | 'pass'
-  const [form,       setForm]    = useState({ name: user.name, phone: user.phone || '', gioiThieu: user.gioiThieu || '' })
-  const [passForm,   setPassForm]= useState({ old: '', new1: '', new2: '' })
-  const [msg,        setMsg]     = useState(null)      // { type:'ok'|'err', text }
+function UserMenuContent({ user, glvs, saveGlvs, onUpdateUser, onLogout }) {
+  const [tab,      setTab]     = useState('info')
+  const [form,     setForm]    = useState({ name: user.name, phone: user.phone || '', gioiThieu: user.gioiThieu || '' })
+  const [passForm, setPassForm]= useState({ old: '', new1: '', new2: '' })
+  const [msg,      setMsg]     = useState(null)
 
   const saveInfo = () => {
     if (!form.name) { setMsg({ type:'err', text:'Vui lòng nhập họ tên' }); return }
@@ -29,9 +26,9 @@ function UserMenuContent({ user, onUpdateUser, onLogout, onClose }) {
   }
 
   const savePass = () => {
-    if (passForm.old !== user.password)      { setMsg({ type:'err', text:'Mật khẩu cũ không đúng' }); return }
-    if (passForm.new1.length < 6)            { setMsg({ type:'err', text:'Mật khẩu mới phải từ 6 ký tự' }); return }
-    if (passForm.new1 !== passForm.new2)     { setMsg({ type:'err', text:'Mật khẩu mới không khớp' }); return }
+    if (passForm.old !== user.password)  { setMsg({ type:'err', text:'Mật khẩu cũ không đúng' }); return }
+    if (passForm.new1.length < 6)        { setMsg({ type:'err', text:'Mật khẩu mới phải từ 6 ký tự' }); return }
+    if (passForm.new1 !== passForm.new2) { setMsg({ type:'err', text:'Mật khẩu mới không khớp' }); return }
     onUpdateUser({ ...user, password: passForm.new1 })
     setMsg({ type:'ok', text:'Đổi mật khẩu thành công!' })
     setPassForm({ old:'', new1:'', new2:'' })
@@ -40,7 +37,6 @@ function UserMenuContent({ user, onUpdateUser, onLogout, onClose }) {
 
   return (
     <>
-      {/* Avatar + tên */}
       <div style={{ display:'flex', alignItems:'center', gap:14, marginBottom:16 }}>
         <div style={{ width:56, height:56, borderRadius:16, background:'var(--sky-ll)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:24, fontWeight:900, color:'var(--sky-dd)', flexShrink:0 }}>
           {user.name.charAt(0)}
@@ -54,17 +50,14 @@ function UserMenuContent({ user, onUpdateUser, onLogout, onClose }) {
         </div>
       </div>
 
-      {/* Tabs */}
       <div className="tabs" style={{ marginBottom:16 }}>
         <button className={`tab ${tab==='info'?'active':''}`} onClick={() => { setTab('info'); setMsg(null) }}>Hồ sơ</button>
         <button className={`tab ${tab==='edit'?'active':''}`} onClick={() => { setTab('edit'); setMsg(null) }}>Chỉnh sửa</button>
         <button className={`tab ${tab==='pass'?'active':''}`} onClick={() => { setTab('pass'); setMsg(null) }}>Đổi mật khẩu</button>
       </div>
 
-      {/* Thông báo */}
       {msg && <div className={`alert ${msg.type==='ok'?'alert-ok':'alert-err'}`}>{msg.text}</div>}
 
-      {/* Tab: Xem hồ sơ */}
       {tab==='info' && (
         <>
           {user.role==='gly' && (
@@ -97,7 +90,7 @@ function UserMenuContent({ user, onUpdateUser, onLogout, onClose }) {
             </div>
             <div style={{ display:'flex', justifyContent:'space-between', fontSize:13, fontWeight:600 }}>
               <span style={{ color:'var(--gray)' }}>Phiên bản</span>
-              <span style={{ fontWeight:700 }}>1.0.0</span>
+              <span style={{ fontWeight:700 }}>1.1.0</span>
             </div>
           </div>
           <div className="divider"/>
@@ -110,7 +103,6 @@ function UserMenuContent({ user, onUpdateUser, onLogout, onClose }) {
         </>
       )}
 
-      {/* Tab: Chỉnh sửa thông tin */}
       {tab==='edit' && (
         <>
           <div className="form-group">
@@ -132,7 +124,6 @@ function UserMenuContent({ user, onUpdateUser, onLogout, onClose }) {
         </>
       )}
 
-      {/* Tab: Đổi mật khẩu */}
       {tab==='pass' && (
         <>
           <div className="form-group">
@@ -157,82 +148,78 @@ function UserMenuContent({ user, onUpdateUser, onLogout, onClose }) {
   )
 }
 
-// ── Cấu hình các tab navigation ─────────────────────
 const PAGES = [
   { id: 'home',       label: 'Trang chủ', icon: Icons.home  },
   { id: 'students',   label: 'Thiếu nhi', icon: Icons.users },
   { id: 'attendance', label: 'Điểm danh', icon: Icons.check },
   { id: 'scores',     label: 'Điểm thi',  icon: Icons.star  },
-  { id: 'reports',    label: 'Báo cáo',   icon: Icons.chart },
+  { id: 'reports',    label: 'Quản lý',   icon: Icons.chart },
 ]
 
 export default function App() {
-  // ── State toàn cục ──────────────────────────────────
   const [user,       setUser]       = useState(null)
   const [students,   setStudents]   = useState(SAMPLE_STUDENTS)
   const [attendance, setAttendance] = useState([])
   const [scores,     setScores]     = useState([])
+  const [glvs,       setGlvs]       = useState([])   // ← state GLV
   const [page,       setPage]       = useState('home')
   const [userMenu,   setUserMenu]   = useState(false)
   const [ready,      setReady]      = useState(false)
 
-  // ── Tải dữ liệu từ localStorage khi khởi động ──────
   useEffect(() => {
     const u  = loadData(KEYS.user)
     const s  = loadData(KEYS.students,   SAMPLE_STUDENTS)
     const a  = loadData(KEYS.attendance, [])
     const sc = loadData(KEYS.scores,     [])
+    const g  = loadData(KEYS.glvs,       [])
     if (u) setUser(u)
     setStudents(s)
     setAttendance(a)
     setScores(sc)
+    setGlvs(g)
     setReady(true)
   }, [])
 
-  // ── Đăng nhập ───────────────────────────────────────
+  // ── Đăng nhập — kiểm tra admin mặc định + GLV động ──
   const handleLogin = (email, password) => {
-    const found = MOCK_USERS.find(u => u.email === email && u.password === password)
-    if (found) {
-      setUser(found)
-      saveData(KEYS.user, found)
-      return true
+    // 1. Admin & tài khoản mặc định
+    const hardcoded = MOCK_USERS.find(u => u.email === email && u.password === password)
+    if (hardcoded) {
+      setUser(hardcoded); saveData(KEYS.user, hardcoded); return true
+    }
+    // 2. GLV được thêm qua quản lý
+    const currentGlvs = loadData(KEYS.glvs, [])
+    const foundGlv = currentGlvs.find(g => g.email === email && g.password === password)
+    if (foundGlv) {
+      setUser(foundGlv); saveData(KEYS.user, foundGlv); return true
     }
     return false
   }
 
-  // ── Đăng xuất ───────────────────────────────────────
   const handleLogout = () => {
-    setUser(null)
-    saveData(KEYS.user, null)
-    setUserMenu(false)
-    setPage('home')
+    setUser(null); saveData(KEYS.user, null)
+    setUserMenu(false); setPage('home')
   }
 
-  // ── Lưu dữ liệu ─────────────────────────────────────
   const saveStudents   = (d) => { setStudents(d);   saveData(KEYS.students,   d) }
   const saveAttendance = (d) => { setAttendance(d); saveData(KEYS.attendance, d) }
   const saveScores     = (d) => { setScores(d);     saveData(KEYS.scores,     d) }
+  const saveGlvs       = (d) => { setGlvs(d);       saveData(KEYS.glvs,       d) }
 
-  // Lọc dữ liệu theo quyền GLV
   const visibleStudents = user?.role === 'admin'
     ? students
     : students.filter(s => s.lopId === user?.classId)
 
-  // ── Loading ─────────────────────────────────────────
   if (!ready) return (
-    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(135deg,#0369A1,#0EA5E9)' }}>
-      <div style={{ color: '#fff', fontFamily: 'Nunito', fontWeight: 800, fontSize: 18 }}>✝ Đang tải...</div>
+    <div style={{ minHeight:'100vh', display:'flex', alignItems:'center', justifyContent:'center', background:'linear-gradient(135deg,#0369A1,#0EA5E9)' }}>
+      <div style={{ color:'#fff', fontFamily:'Nunito', fontWeight:800, fontSize:18 }}>✝ Đang tải...</div>
     </div>
   )
 
-  // ── Chưa đăng nhập ──────────────────────────────────
   if (!user) return <LoginScreen onLogin={handleLogin} />
 
-  // ── App chính ───────────────────────────────────────
   return (
     <div className="app">
-
-      {/* TopBar */}
       <div className="topbar">
         <div>
           <div className="topbar-title">✝ Ban Giáo Lý</div>
@@ -243,14 +230,19 @@ export default function App() {
         </div>
       </div>
 
-      {/* Nội dung từng trang */}
-      {page === 'home'       && <Dashboard   user={user} students={visibleStudents} attendance={attendance} />}
+      {page === 'home'       && <Dashboard   user={user} students={visibleStudents} attendance={attendance} scores={scores} />}
       {page === 'students'   && <Students    user={user} students={visibleStudents} onSave={saveStudents} />}
       {page === 'attendance' && <Attendance  user={user} students={visibleStudents} attendance={attendance} onSave={saveAttendance} />}
       {page === 'scores'     && <Scores      user={user} students={visibleStudents} scores={scores} onSave={saveScores} />}
-      {page === 'reports'    && <Reports     user={user} students={visibleStudents} attendance={attendance} scores={scores} />}
+      {page === 'reports'    && <Reports
+                                  user={user}
+                                  students={students}
+                                  attendance={attendance}
+                                  scores={scores}
+                                  glvs={glvs}
+                                  onSaveGlvs={saveGlvs}
+                                />}
 
-      {/* Bottom Navigation */}
       <nav className="bnav">
         {PAGES.map(p => (
           <button key={p.id} className={`bnav-btn ${page === p.id ? 'active' : ''}`} onClick={() => setPage(p.id)}>
@@ -260,16 +252,23 @@ export default function App() {
         ))}
       </nav>
 
-      {/* Menu người dùng */}
       {userMenu && (
         <div className="overlay" onClick={() => setUserMenu(false)}>
           <div className="modal" onClick={e => e.stopPropagation()}>
             <div className="modal-handle"/>
             <UserMenuContent
               user={user}
-              onUpdateUser={(updated) => { setUser(updated); saveData(KEYS.user, updated) }}
+              glvs={glvs}
+              saveGlvs={saveGlvs}
+              onUpdateUser={(updated) => {
+                setUser(updated)
+                saveData(KEYS.user, updated)
+                if (updated.role === 'gly') {
+                  const newGlvs = glvs.map(g => g.id === updated.id ? updated : g)
+                  saveGlvs(newGlvs)
+                }
+              }}
               onLogout={handleLogout}
-              onClose={() => setUserMenu(false)}
             />
           </div>
         </div>
