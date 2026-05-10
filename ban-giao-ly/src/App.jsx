@@ -1,17 +1,31 @@
-// ═══════════════════════════════════════════════════════
-// App.jsx  —  Component gốc, quản lý toàn bộ trạng thái
-// ═══════════════════════════════════════════════════════
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { MOCK_USERS, SAMPLE_STUDENTS, ALL_CLASSES, getClass } from './constants'
-import { saveData, loadData, KEYS }     from './utils/storage'
-import { Icons }                        from './components/Icons'
-import LoginScreen                      from './components/LoginScreen'
-import Dashboard                        from './pages/Dashboard'
-import Students                         from './pages/Students'
-import Attendance                       from './pages/Attendance'
-import Scores                           from './pages/Scores'
-import Reports                          from './pages/Reports'
+import { saveData, loadData, KEYS } from './utils/storage'
+import { Icons } from './components/Icons'
+import LoginScreen from './components/LoginScreen'
+import Dashboard   from './pages/Dashboard'
+import Students    from './pages/Students'
+import Attendance  from './pages/Attendance'
+import Scores      from './pages/Scores'
+import Reports     from './pages/Reports'
 
+// ── Splash Screen ────────────────────────────────────
+function SplashScreen() {
+  return (
+    <div className="splash">
+      <div className="splash-logo">✝</div>
+      <div className="splash-title">Ban Giáo Lý</div>
+      <div className="splash-sub">GX Âm Sa · Đài Môn · Thuần Hậu</div>
+      <div className="splash-dots">
+        <div className="splash-dot"/>
+        <div className="splash-dot"/>
+        <div className="splash-dot"/>
+      </div>
+    </div>
+  )
+}
+
+// ── User Menu ─────────────────────────────────────────
 function UserMenuContent({ user, glvs, saveGlvs, onUpdateUser, onLogout }) {
   const [tab,      setTab]     = useState('info')
   const [form,     setForm]    = useState({ name: user.name, phone: user.phone || '', gioiThieu: user.gioiThieu || '' })
@@ -21,10 +35,9 @@ function UserMenuContent({ user, glvs, saveGlvs, onUpdateUser, onLogout }) {
   const saveInfo = () => {
     if (!form.name) { setMsg({ type:'err', text:'Vui lòng nhập họ tên' }); return }
     onUpdateUser({ ...user, ...form })
-    setMsg({ type:'ok', text:'Đã lưu thông tin thành công!' })
+    setMsg({ type:'ok', text:'Đã lưu thành công!' })
     setTimeout(() => { setMsg(null); setTab('info') }, 1500)
   }
-
   const savePass = () => {
     if (passForm.old !== user.password)  { setMsg({ type:'err', text:'Mật khẩu cũ không đúng' }); return }
     if (passForm.new1.length < 6)        { setMsg({ type:'err', text:'Mật khẩu mới phải từ 6 ký tự' }); return }
@@ -42,7 +55,7 @@ function UserMenuContent({ user, glvs, saveGlvs, onUpdateUser, onLogout }) {
           {user.name.charAt(0)}
         </div>
         <div>
-          <div style={{ fontWeight:900, fontSize:17 }}>{user.name}</div>
+          <div style={{ fontWeight:900, fontSize:17, color:'var(--text)' }}>{user.name}</div>
           <div style={{ fontSize:12, color:'var(--gray)', fontWeight:600, marginBottom:4 }}>{user.email}</div>
           <span className={`badge ${user.role==='admin'?'badge-blue':'badge-green'}`}>
             {user.role==='admin' ? '👑 Admin tổng' : '📚 Giáo lý viên'}
@@ -51,9 +64,11 @@ function UserMenuContent({ user, glvs, saveGlvs, onUpdateUser, onLogout }) {
       </div>
 
       <div className="tabs" style={{ marginBottom:16 }}>
-        <button className={`tab ${tab==='info'?'active':''}`} onClick={() => { setTab('info'); setMsg(null) }}>Hồ sơ</button>
-        <button className={`tab ${tab==='edit'?'active':''}`} onClick={() => { setTab('edit'); setMsg(null) }}>Chỉnh sửa</button>
-        <button className={`tab ${tab==='pass'?'active':''}`} onClick={() => { setTab('pass'); setMsg(null) }}>Đổi mật khẩu</button>
+        {['info','edit','pass'].map(t => (
+          <button key={t} className={`tab ${tab===t?'active':''}`} onClick={() => { setTab(t); setMsg(null) }}>
+            {t==='info'?'Hồ sơ':t==='edit'?'Chỉnh sửa':'Đổi MK'}
+          </button>
+        ))}
       </div>
 
       {msg && <div className={`alert ${msg.type==='ok'?'alert-ok':'alert-err'}`}>{msg.text}</div>}
@@ -62,85 +77,41 @@ function UserMenuContent({ user, glvs, saveGlvs, onUpdateUser, onLogout }) {
         <>
           {user.role==='gly' && (
             <div style={{ background:'var(--sky-bg)', borderRadius:12, padding:'12px 14px', marginBottom:12 }}>
-              <div style={{ fontSize:11, fontWeight:800, color:'var(--gray)', textTransform:'uppercase', letterSpacing:'.5px', marginBottom:8 }}>Phân công</div>
-              <div style={{ fontSize:14, fontWeight:700, color:'var(--sky-dd)' }}>
-                📋 Lớp: {getClass(user.classId)?.name}
-              </div>
+              <div style={{ fontSize:11, fontWeight:800, color:'var(--gray)', textTransform:'uppercase', letterSpacing:'.5px', marginBottom:6 }}>Phân công</div>
+              <div style={{ fontSize:14, fontWeight:700, color:'var(--sky-dd)' }}>📋 {getClass(user.classId)?.name}</div>
             </div>
           )}
-          <div style={{ background:'#F8FAFC', borderRadius:12, padding:'12px 14px', marginBottom:14 }}>
-            <div style={{ fontSize:11, fontWeight:800, color:'var(--gray)', textTransform:'uppercase', letterSpacing:'.5px', marginBottom:10 }}>Thông tin cá nhân</div>
-            {[
-              { label:'Họ tên',        val: user.name },
-              { label:'Email',         val: user.email },
-              { label:'Số điện thoại', val: user.phone || '—' },
-              { label:'Giới thiệu',    val: user.gioiThieu || '—' },
-            ].map(({ label, val }) => (
-              <div key={label} style={{ display:'flex', justifyContent:'space-between', fontSize:13, fontWeight:600, marginBottom:8, gap:8 }}>
-                <span style={{ color:'var(--gray)', flexShrink:0 }}>{label}</span>
-                <span style={{ fontWeight:700, textAlign:'right' }}>{val}</span>
+          <div style={{ background:'var(--bg)', borderRadius:12, padding:'12px 14px', marginBottom:14 }}>
+            {[['Họ tên',user.name],['Email',user.email],['Điện thoại',user.phone||'—'],['Giới thiệu',user.gioiThieu||'—']].map(([l,v])=>(
+              <div key={l} style={{ display:'flex', justifyContent:'space-between', fontSize:13, fontWeight:600, marginBottom:8, gap:8 }}>
+                <span style={{ color:'var(--gray)', flexShrink:0 }}>{l}</span>
+                <span style={{ fontWeight:700, textAlign:'right', color:'var(--text)' }}>{v}</span>
               </div>
             ))}
           </div>
-          <div style={{ background:'#F8FAFC', borderRadius:12, padding:'12px 14px', marginBottom:14 }}>
-            <div style={{ fontSize:11, fontWeight:800, color:'var(--gray)', textTransform:'uppercase', letterSpacing:'.5px', marginBottom:10 }}>Thông tin app</div>
-            <div style={{ display:'flex', justifyContent:'space-between', fontSize:13, fontWeight:600, marginBottom:4 }}>
-              <span style={{ color:'var(--gray)' }}>Giáo xứ</span>
-              <span style={{ fontWeight:700 }}>Âm Sa · Đài Môn · Thuần Hậu</span>
-            </div>
-            <div style={{ display:'flex', justifyContent:'space-between', fontSize:13, fontWeight:600 }}>
-              <span style={{ color:'var(--gray)' }}>Phiên bản</span>
-              <span style={{ fontWeight:700 }}>1.1.0</span>
-            </div>
-          </div>
           <div className="divider"/>
-          <button className="btn btn-outline btn-full" style={{ marginBottom:10 }} onClick={onLogout}>
-            🔄 Đăng nhập tài khoản khác
-          </button>
-          <button className="btn btn-danger btn-full" onClick={onLogout}>
-            🚪 Đăng xuất
-          </button>
+          <button className="btn btn-danger btn-full" onClick={onLogout}>🚪 Đăng xuất</button>
         </>
       )}
-
       {tab==='edit' && (
         <>
-          <div className="form-group">
-            <label className="form-label">Họ và tên *</label>
-            <input className="form-input" placeholder="Nguyễn Văn A"
-              value={form.name} onChange={e => setForm({ ...form, name:e.target.value })} />
-          </div>
-          <div className="form-group">
-            <label className="form-label">Số điện thoại</label>
-            <input className="form-input" type="tel" placeholder="09xxxxxxxx"
-              value={form.phone} onChange={e => setForm({ ...form, phone:e.target.value })} />
-          </div>
-          <div className="form-group">
-            <label className="form-label">Giới thiệu bản thân</label>
-            <input className="form-input" placeholder="GLV lớp Khai Tâm, GX Âm Sa..."
-              value={form.gioiThieu} onChange={e => setForm({ ...form, gioiThieu:e.target.value })} />
-          </div>
+          {[['name','Họ và tên *','Nguyễn Văn A','text'],['phone','Điện thoại','09xxxxxxxx','tel'],['gioiThieu','Giới thiệu','GLV lớp...','text']].map(([k,l,ph,t])=>(
+            <div className="form-group" key={k}>
+              <label className="form-label">{l}</label>
+              <input className="form-input" type={t} placeholder={ph} value={form[k]||''} onChange={e=>setForm({...form,[k]:e.target.value})}/>
+            </div>
+          ))}
           <button className="btn btn-primary btn-full" onClick={saveInfo}>💾 Lưu thông tin</button>
         </>
       )}
-
       {tab==='pass' && (
         <>
-          <div className="form-group">
-            <label className="form-label">Mật khẩu hiện tại</label>
-            <input className="form-input" type="password" placeholder="••••••"
-              value={passForm.old} onChange={e => setPassForm({ ...passForm, old:e.target.value })} />
-          </div>
-          <div className="form-group">
-            <label className="form-label">Mật khẩu mới</label>
-            <input className="form-input" type="password" placeholder="Tối thiểu 6 ký tự"
-              value={passForm.new1} onChange={e => setPassForm({ ...passForm, new1:e.target.value })} />
-          </div>
-          <div className="form-group">
-            <label className="form-label">Xác nhận mật khẩu mới</label>
-            <input className="form-input" type="password" placeholder="Nhập lại mật khẩu mới"
-              value={passForm.new2} onChange={e => setPassForm({ ...passForm, new2:e.target.value })} />
-          </div>
+          {[['old','Mật khẩu hiện tại'],['new1','Mật khẩu mới'],['new2','Xác nhận mật khẩu mới']].map(([k,l])=>(
+            <div className="form-group" key={k}>
+              <label className="form-label">{l}</label>
+              <input className="form-input" type="password" placeholder="••••••" value={passForm[k]} onChange={e=>setPassForm({...passForm,[k]:e.target.value})}/>
+            </div>
+          ))}
           <button className="btn btn-primary btn-full" onClick={savePass}>🔐 Đổi mật khẩu</button>
         </>
       )}
@@ -148,12 +119,112 @@ function UserMenuContent({ user, glvs, saveGlvs, onUpdateUser, onLogout }) {
   )
 }
 
+// ── Notification Panel ────────────────────────────────
+function NotifPanel({ notifs, user, onSave, onClose }) {
+  const myNotifs = notifs.filter(n => n.to === 'all' || n.to === user.role || n.to === user.id)
+  const unread   = myNotifs.filter(n => !n.readBy?.includes(user.id))
+
+  const markRead = (id) => {
+    const updated = notifs.map(n =>
+      n.id === id ? { ...n, readBy: [...(n.readBy||[]), user.id] } : n
+    )
+    onSave(updated)
+  }
+  const markAll = () => {
+    const updated = notifs.map(n =>
+      (n.to==='all'||n.to===user.role||n.to===user.id)
+        ? { ...n, readBy: [...new Set([...(n.readBy||[]), user.id])] }
+        : n
+    )
+    onSave(updated)
+  }
+
+  const [showForm, setShowForm] = useState(false)
+  const [form, setForm] = useState({ title:'', body:'', icon:'📢', to:'all' })
+
+  const addNotif = () => {
+    if (!form.title || !form.body) return
+    const newN = { id: Date.now()+'', ...form, time: new Date().toISOString(), readBy:[], from: user.id }
+    onSave([newN, ...notifs])
+    setForm({ title:'', body:'', icon:'📢', to:'all' }); setShowForm(false)
+  }
+
+  return (
+    <div className="overlay" onClick={e=>e.target===e.currentTarget&&onClose()}>
+      <div className="modal">
+        <div className="modal-handle"/>
+        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:14 }}>
+          <div className="modal-title" style={{ marginBottom:0 }}>🔔 Thông báo</div>
+          <div style={{ display:'flex', gap:8 }}>
+            {unread.length > 0 && (
+              <button className="btn btn-sm btn-outline" onClick={markAll}>Đọc tất cả</button>
+            )}
+            {user.role === 'admin' && (
+              <button className="btn btn-sm btn-primary" onClick={() => setShowForm(!showForm)}>+ Thêm</button>
+            )}
+          </div>
+        </div>
+
+        {/* Form thêm thông báo (admin) */}
+        {showForm && (
+          <div style={{ background:'var(--sky-bg)', borderRadius:12, padding:14, marginBottom:14 }}>
+            <div className="form-group">
+              <label className="form-label">Icon</label>
+              <div style={{ display:'flex', gap:8, flexWrap:'wrap' }}>
+                {['📢','⛪','📅','⚠️','✅','🎉','📝','🙏'].map(ic=>(
+                  <button key={ic} onClick={()=>setForm({...form,icon:ic})}
+                    style={{ fontSize:20, padding:'4px 8px', borderRadius:8, border:'2px solid', borderColor: form.icon===ic?'var(--sky)':'var(--lgray)', background:'var(--card-bg)', cursor:'pointer' }}>
+                    {ic}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div className="form-group">
+              <label className="form-label">Tiêu đề</label>
+              <input className="form-input" placeholder="Tiêu đề thông báo" value={form.title} onChange={e=>setForm({...form,title:e.target.value})}/>
+            </div>
+            <div className="form-group">
+              <label className="form-label">Nội dung</label>
+              <input className="form-input" placeholder="Nội dung..." value={form.body} onChange={e=>setForm({...form,body:e.target.value})}/>
+            </div>
+            <div className="form-group">
+              <label className="form-label">Gửi đến</label>
+              <select className="form-input" value={form.to} onChange={e=>setForm({...form,to:e.target.value})}>
+                <option value="all">Tất cả</option>
+                <option value="gly">Giáo lý viên</option>
+                <option value="admin">Admin</option>
+              </select>
+            </div>
+            <button className="btn btn-primary btn-full" onClick={addNotif}>📢 Gửi thông báo</button>
+          </div>
+        )}
+
+        {myNotifs.length === 0 ? (
+          <div className="empty"><div className="empty-icon">🔔</div><div className="empty-text">Chưa có thông báo</div></div>
+        ) : myNotifs.map(n => {
+          const isUnread = !n.readBy?.includes(user.id)
+          return (
+            <div key={n.id} className={`notif-item ${isUnread?'unread':''}`} onClick={() => markRead(n.id)}>
+              <div className="notif-icon">{n.icon}</div>
+              <div style={{ flex:1 }}>
+                <div className="notif-title">{n.title} {isUnread && <span style={{ width:7, height:7, borderRadius:'50%', background:'var(--sky)', display:'inline-block', marginLeft:4 }}/>}</div>
+                <div className="notif-body">{n.body}</div>
+                <div className="notif-time">{new Date(n.time).toLocaleDateString('vi-VN',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'})}</div>
+              </div>
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
 const PAGES = [
-  { id: 'home',       label: 'Trang chủ', icon: Icons.home  },
-  { id: 'students',   label: 'Thiếu nhi', icon: Icons.users },
-  { id: 'attendance', label: 'Điểm danh', icon: Icons.check },
-  { id: 'scores',     label: 'Điểm thi',  icon: Icons.star  },
-  { id: 'reports',    label: 'Quản lý',   icon: Icons.chart },
+  { id:'home',       label:'Trang chủ', icon:Icons.home  },
+  { id:'students',   label:'Thiếu nhi', icon:Icons.users },
+  { id:'attendance', label:'Điểm danh', icon:Icons.check },
+  { id:'scores',     label:'Điểm thi',  icon:Icons.star  },
+  { id:'reports',    label:'Quản lý',   icon:Icons.chart },
 ]
 
 export default function App() {
@@ -161,38 +232,50 @@ export default function App() {
   const [students,   setStudents]   = useState(SAMPLE_STUDENTS)
   const [attendance, setAttendance] = useState([])
   const [scores,     setScores]     = useState([])
-  const [glvs,       setGlvs]       = useState([])   // ← state GLV
+  const [glvs,       setGlvs]       = useState([])
+  const [notifs,     setNotifs]     = useState([])
   const [page,       setPage]       = useState('home')
   const [userMenu,   setUserMenu]   = useState(false)
+  const [showNotif,  setShowNotif]  = useState(false)
+  const [theme,      setTheme]      = useState('light')
+  const [splash,     setSplash]     = useState(true)
   const [ready,      setReady]      = useState(false)
 
+  // Splash 2.5s
+  useEffect(() => {
+    const t = setTimeout(() => setSplash(false), 2500)
+    return () => clearTimeout(t)
+  }, [])
+
+  // Load dữ liệu
   useEffect(() => {
     const u  = loadData(KEYS.user)
     const s  = loadData(KEYS.students,   SAMPLE_STUDENTS)
     const a  = loadData(KEYS.attendance, [])
     const sc = loadData(KEYS.scores,     [])
     const g  = loadData(KEYS.glvs,       [])
-    if (u) setUser(u)
-    setStudents(s)
-    setAttendance(a)
-    setScores(sc)
-    setGlvs(g)
+    const n  = loadData(KEYS.notifs,     [])
+    const th = loadData(KEYS.theme,      'light')
+    if (u)  setUser(u)
+    setStudents(s); setAttendance(a); setScores(sc); setGlvs(g); setNotifs(n)
+    setTheme(th)
+    document.documentElement.setAttribute('data-theme', th)
     setReady(true)
   }, [])
 
-  // ── Đăng nhập — kiểm tra admin mặc định + GLV động ──
+  const toggleTheme = () => {
+    const next = theme === 'light' ? 'dark' : 'light'
+    setTheme(next)
+    document.documentElement.setAttribute('data-theme', next)
+    saveData(KEYS.theme, next)
+  }
+
   const handleLogin = (email, password) => {
-    // 1. Admin & tài khoản mặc định
-    const hardcoded = MOCK_USERS.find(u => u.email === email && u.password === password)
-    if (hardcoded) {
-      setUser(hardcoded); saveData(KEYS.user, hardcoded); return true
-    }
-    // 2. GLV được thêm qua quản lý
+    const hardcoded = MOCK_USERS.find(u => u.email===email && u.password===password)
+    if (hardcoded) { setUser(hardcoded); saveData(KEYS.user, hardcoded); return true }
     const currentGlvs = loadData(KEYS.glvs, [])
-    const foundGlv = currentGlvs.find(g => g.email === email && g.password === password)
-    if (foundGlv) {
-      setUser(foundGlv); saveData(KEYS.user, foundGlv); return true
-    }
+    const foundGlv = currentGlvs.find(g => g.email===email && g.password===password)
+    if (foundGlv)  { setUser(foundGlv); saveData(KEYS.user, foundGlv); return true }
     return false
   }
 
@@ -201,77 +284,90 @@ export default function App() {
     setUserMenu(false); setPage('home')
   }
 
-  const saveStudents   = (d) => { setStudents(d);   saveData(KEYS.students,   d) }
-  const saveAttendance = (d) => { setAttendance(d); saveData(KEYS.attendance, d) }
-  const saveScores     = (d) => { setScores(d);     saveData(KEYS.scores,     d) }
-  const saveGlvs       = (d) => { setGlvs(d);       saveData(KEYS.glvs,       d) }
+  const saveStudents   = d => { setStudents(d);   saveData(KEYS.students,   d) }
+  const saveAttendance = d => { setAttendance(d); saveData(KEYS.attendance, d) }
+  const saveScores     = d => { setScores(d);     saveData(KEYS.scores,     d) }
+  const saveGlvs       = d => { setGlvs(d);       saveData(KEYS.glvs,       d) }
+  const saveNotifs     = d => { setNotifs(d);      saveData(KEYS.notifs,     d) }
 
-  const visibleStudents = user?.role === 'admin'
-    ? students
-    : students.filter(s => s.lopId === user?.classId)
+  const visibleStudents = user?.role==='admin' ? students : students.filter(s=>s.lopId===user?.classId)
 
-  if (!ready) return (
-    <div style={{ minHeight:'100vh', display:'flex', alignItems:'center', justifyContent:'center', background:'linear-gradient(135deg,#0369A1,#0EA5E9)' }}>
-      <div style={{ color:'#fff', fontFamily:'Nunito', fontWeight:800, fontSize:18 }}>✝ Đang tải...</div>
-    </div>
-  )
+  // Đếm thông báo chưa đọc
+  const unreadCount = user ? notifs.filter(n =>
+    (n.to==='all'||n.to===user.role||n.to===user.id) && !n.readBy?.includes(user.id)
+  ).length : 0
 
-  if (!user) return <LoginScreen onLogin={handleLogin} />
+  if (!ready) return null
+  if (!user)  return <LoginScreen onLogin={handleLogin}/>
 
   return (
     <div className="app">
+      {splash && <SplashScreen/>}
+
+      {/* TopBar */}
       <div className="topbar">
-        <div>
-          <div className="topbar-title">✝ Ban Giáo Lý</div>
-          <div className="topbar-sub">GX Âm Sa · Đài Môn · Thuần Hậu</div>
+        <div className="topbar-logo">
+          <div className="topbar-icon">✝</div>
+          <div>
+            <div className="topbar-title">Ban Giáo Lý</div>
+            <div className="topbar-sub">GX Âm Sa · Đài Môn · Thuần Hậu</div>
+          </div>
         </div>
-        <div className="avatar" onClick={() => setUserMenu(true)}>
-          {user.name.charAt(0)}
+        <div className="topbar-actions">
+          {/* Dark mode toggle */}
+          <button className="topbar-btn" onClick={toggleTheme} title="Đổi giao diện">
+            {theme==='dark' ? '☀️' : '🌙'}
+          </button>
+          {/* Thông báo */}
+          <button className="topbar-btn" onClick={()=>setShowNotif(true)}>
+            🔔
+            {unreadCount > 0 && (
+              <div className="notif-badge">{unreadCount > 9 ? '9+' : unreadCount}</div>
+            )}
+          </button>
+          {/* Avatar */}
+          <div className="avatar" onClick={()=>setUserMenu(true)}>
+            {user.name.charAt(0)}
+          </div>
         </div>
       </div>
 
-      {page === 'home'       && <Dashboard   user={user} students={visibleStudents} attendance={attendance} scores={scores} />}
-      {page === 'students'   && <Students    user={user} students={visibleStudents} onSave={saveStudents} />}
-      {page === 'attendance' && <Attendance  user={user} students={visibleStudents} attendance={attendance} onSave={saveAttendance} />}
-      {page === 'scores'     && <Scores      user={user} students={visibleStudents} scores={scores} onSave={saveScores} />}
-      {page === 'reports'    && <Reports
-                                  user={user}
-                                  students={students}
-                                  attendance={attendance}
-                                  scores={scores}
-                                  glvs={glvs}
-                                  onSaveGlvs={saveGlvs}
-                                />}
+      {/* Pages */}
+      {page==='home'       && <Dashboard   user={user} students={visibleStudents} attendance={attendance} scores={scores} notifs={notifs} onSaveNotifs={saveNotifs}/>}
+      {page==='students'   && <Students    user={user} students={visibleStudents} onSave={saveStudents}/>}
+      {page==='attendance' && <Attendance  user={user} students={visibleStudents} attendance={attendance} onSave={saveAttendance}/>}
+      {page==='scores'     && <Scores      user={user} students={visibleStudents} scores={scores} onSave={saveScores}/>}
+      {page==='reports'    && <Reports     user={user} students={students} attendance={attendance} scores={scores} glvs={glvs} onSaveGlvs={saveGlvs}/>}
 
+      {/* Bottom nav */}
       <nav className="bnav">
-        {PAGES.map(p => (
-          <button key={p.id} className={`bnav-btn ${page === p.id ? 'active' : ''}`} onClick={() => setPage(p.id)}>
-            {p.icon}
-            {p.label}
+        {PAGES.map(p=>(
+          <button key={p.id} className={`bnav-btn ${page===p.id?'active':''}`} onClick={()=>setPage(p.id)}>
+            {p.icon}{p.label}
           </button>
         ))}
       </nav>
 
+      {/* User menu */}
       {userMenu && (
-        <div className="overlay" onClick={() => setUserMenu(false)}>
-          <div className="modal" onClick={e => e.stopPropagation()}>
+        <div className="overlay" onClick={()=>setUserMenu(false)}>
+          <div className="modal" onClick={e=>e.stopPropagation()}>
             <div className="modal-handle"/>
             <UserMenuContent
-              user={user}
-              glvs={glvs}
-              saveGlvs={saveGlvs}
-              onUpdateUser={(updated) => {
-                setUser(updated)
-                saveData(KEYS.user, updated)
-                if (updated.role === 'gly') {
-                  const newGlvs = glvs.map(g => g.id === updated.id ? updated : g)
-                  saveGlvs(newGlvs)
-                }
+              user={user} glvs={glvs} saveGlvs={saveGlvs}
+              onUpdateUser={updated => {
+                setUser(updated); saveData(KEYS.user, updated)
+                if (updated.role==='gly') saveGlvs(glvs.map(g=>g.id===updated.id?updated:g))
               }}
               onLogout={handleLogout}
             />
           </div>
         </div>
+      )}
+
+      {/* Thông báo */}
+      {showNotif && (
+        <NotifPanel notifs={notifs} user={user} onSave={saveNotifs} onClose={()=>setShowNotif(false)}/>
       )}
     </div>
   )
