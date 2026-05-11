@@ -1,13 +1,24 @@
 {
-  "name": "Ban Giáo Lý",
+  "name": "Ban Giáo Lý GXAMSA",
   "short_name": "Giáo Lý",
-  "description": "Quản lý thiếu nhi GX Âm Sa - Đài Môn - Thuần Hậu",
+  "description": "Quản lý thiếu nhi GX Âm Sa, Đài Môn, Thuần Hậu",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#EFF6FF",
+  "background_color": "#0369A1",
   "theme_color": "#0284C7",
+  "orientation": "portrait",
   "icons": [
-    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" },
-    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png" }
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
   ]
 }

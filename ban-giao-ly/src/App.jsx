@@ -3,7 +3,7 @@
 // ═══════════════════════════════════════════════════════
 import { useState, useEffect, useCallback } from 'react'
 import { SAMPLE_STUDENTS, ALL_CLASSES, getClass } from './constants'
-import { saveLocalData, loadLocalData, loadAllData, saveSheet, initSheets, KEYS } from './utils/storage'
+import { saveLocalData, loadLocalData, loadAllData, loadSheet, saveSheet, initSheets, KEYS } from './utils/storage'
 import { Icons }        from './components/Icons'
 import LoginScreen      from './components/LoginScreen'
 import Dashboard        from './pages/Dashboard'
@@ -215,6 +215,7 @@ const PAGES = [
 ]
 
 export default function App() {
+  // Auto-reload mỗi 30 giây
   const [user,       setUser]       = useState(null)
   const [students,   setStudents]   = useState([])
   const [attendance, setAttendance] = useState([])
@@ -276,7 +277,29 @@ export default function App() {
     init()
   }, [])
 
-  // Sync lên Sheets sau mỗi thay đổi
+  // ── Auto-reload dữ liệu mỗi 30 giây ──────────────────
+  useEffect(() => {
+    if (!user) return
+    const interval = setInterval(async () => {
+      try {
+        const [s, a, sc, g, p, n] = await Promise.all([
+          loadSheet('students',   []),
+          loadSheet('attendance', []),
+          loadSheet('scores',     []),
+          loadSheet('glvs',       []),
+          loadSheet('pending',    []),
+          loadSheet('notifs',     []),
+        ])
+        if (s.length)  setStudents(s)
+        if (a.length)  setAttendance(a)
+        if (sc.length) setScores(sc)
+        if (g.length)  setGlvs(g)
+        setPending(p)
+        setNotifs(n)
+      } catch {}
+    }, 30000) // 30 giây
+    return () => clearInterval(interval)
+  }, [user])
   const syncSheet = useCallback(async (sheetName, data) => {
     setSyncStatus('saving')
     try {
@@ -296,13 +319,24 @@ export default function App() {
     saveLocalData(KEYS.theme, next)
   }
 
-  // Đăng nhập — tìm trong users + glvs từ Sheets
+  // Đăng nhập — fetch mới từ Sheets mỗi lần login
   const handleLogin = async (email, password) => {
     // Kiểm tra pending
     if (pending.find(p=>p.email===email)) return 'pending'
 
-    const allAccounts = [...users, ...glvs]
-    const found = allAccounts.find(u=>u.email===email&&u.password===password)
+    // Fetch fresh từ Sheets
+    const [freshUsers, freshGlvs] = await Promise.all([
+      loadSheet('users', []),
+      loadSheet('glvs',  []),
+    ])
+    if (freshUsers.length) setUsers(freshUsers)
+    if (freshGlvs.length)  setGlvs(freshGlvs)
+
+    const allAccounts = [...freshUsers, ...freshGlvs]
+    const found = allAccounts.find(u =>
+      String(u.email).trim() === String(email).trim() &&
+      String(u.password).trim() === String(password).trim()
+    )
     if (found) {
       setUser(found)
       saveLocalData(KEYS.user, found)
