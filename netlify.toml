@@ -1,0 +1,9 @@
+[build]
+  base    = "ban-giao-ly"
+  command = "npm ci && npm run build"
+  publish = "ban-giao-ly/dist"
+
+[[redirects]]
+  from   = "/*"
+  to     = "/index.html"
+  status = 200
